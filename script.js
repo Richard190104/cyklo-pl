@@ -10,7 +10,6 @@ function rebuildRiderTeam() {
   RIDER_TEAM = {};
   DATA.teams.forEach(t => t.riders.forEach(r => RIDER_TEAM[r] = t));
 }
-rebuildRiderTeam();
 
 function allRiders() { return DATA.teams.flatMap(t => t.riders); }
 function doneStages() { return DATA.stages.filter(s => s.status === 'done'); }
@@ -448,7 +447,11 @@ document.addEventListener('click', e => {
 function closeMenu() { document.querySelector('.nav-links')?.classList.remove('open'); }
 document.getElementById('burger')?.addEventListener('click', () => document.querySelector('.nav-links').classList.toggle('open'));
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+  app.innerHTML = '<div class="wrap"><p class="lead" style="margin-top:40px">Načítavam dáta…</p></div>';
+  const loaded = await fetchData();
+  if (loaded) DATA = loaded;
+  rebuildRiderTeam();
   const start = location.hash ? location.hash.slice(1) : 'home';
   go(start);
 });

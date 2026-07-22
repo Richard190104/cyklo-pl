@@ -29,8 +29,8 @@ const arrToLines = a => (a || []).join('\n');
 const numsFromStr = s => s.split(',').map(x => parseInt(x.trim(), 10)).filter(n => !isNaN(n));
 const slug = s => (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') || ('id' + (D.premieTypes.length + D.teams.length));
 
-function markDirty() { dirty = true; $('#save-state').textContent = '● neuložené zmeny'; $('#save-state').className = 'save-state on'; }
-function markClean() { dirty = false; $('#save-state').textContent = 'uložené'; $('#save-state').className = 'save-state'; }
+function markDirty() { dirty = true; $('#save-state').textContent = '● nepublikované zmeny'; $('#save-state').className = 'save-state on'; }
+function markClean() { dirty = false; $('#save-state').textContent = 'zosynchronizované'; $('#save-state').className = 'save-state'; }
 
 function toast(msg) {
   const t = $('#toast');
@@ -41,9 +41,12 @@ function toast(msg) {
 function allRiderNames() { return D.teams.flatMap(t => t.riders); }
 
 /* ---------- PRIHLÁSENIE ---------- */
-function showAdmin() {
+async function showAdmin() {
   $('#login').hidden = true;
   $('#admin').hidden = false;
+  $('#admin-main').innerHTML = '<p class="hint" style="padding:20px">Načítavam dáta z data.json…</p>';
+  const loaded = await fetchData();
+  D = loaded ? loaded : cloneData(DEFAULT_DATA);
   markClean();
   renderTab('stages');
 }
@@ -67,18 +70,24 @@ $('#btn-logout').addEventListener('click', () => {
 
 if (safeSession('get') === '1') showAdmin();
 
-/* ---------- ULOŽENIE ---------- */
-$('#btn-save').addEventListener('click', () => {
-  try {
-    saveData(D);
-    DATA = cloneData(D);
-    markClean();
-    toast('✓ Uložené. Web je aktualizovaný.');
-  } catch (e) {
-    alert('Uloženie do prehliadača zlyhalo (úložisko je blokované).\n' +
-          'Použi radšej záložku „Export / Import" → Exportovať ako data.js.');
+/* ---------- PUBLIKOVANIE ---------- */
+$('#btn-save').addEventListener('click', publishNow);
+
+async function publishNow() {
+  const c = loadGh();
+  if (!c.owner || !c.repo || !c.token) {
+    alert('Najprv vyplň GitHub nastavenia v záložke „Publikovanie".');
+    document.querySelector('.atab[data-tab="publish"]').click();
+    return;
   }
-});
+  const btn = $('#btn-save');
+  const old = btn.textContent;
+  btn.disabled = true; btn.textContent = 'Publikujem…';
+  const r = await publishToGithub(D);
+  btn.disabled = false; btn.textContent = old;
+  if (r.ok) { markClean(); toast('✓ Publikované. Web sa obnoví do ~1 min.'); }
+  else { alert('Publikovanie zlyhalo:\n' + r.message + '\n\nTip: skontroluj token a názov repozitára. Alebo použi „Stiahnuť data.json" a nahraj ho ručne.'); }
+}
 
 window.addEventListener('beforeunload', e => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 
@@ -97,7 +106,7 @@ function renderTab(tab) {
   else if (tab === 'scoring') m.innerHTML = tabScoring();
   else if (tab === 'general') m.innerHTML = tabGeneral();
   else if (tab === 'gallery') m.innerHTML = tabGallery();
-  else if (tab === 'data') m.innerHTML = tabData();
+  else if (tab === 'publish') m.innerHTML = tabPublish();
 }
 
 /* =====================================================================
@@ -255,20 +264,39 @@ function tabGallery() {
 }
 
 /* =====================================================================
-   TAB: EXPORT / IMPORT
+   TAB: PUBLIKOVANIE (GitHub) + ZÁLOHA
    ===================================================================== */
-function tabData() {
-  return card('Export / Import / Reset', `
-    <p class="hint">Zmeny uložené tlačidlom <b>Uložiť</b> sú len v tomto prehliadači (localStorage). Aby ich videli všetci na hostingu, <b>exportuj</b> dáta a nahraj súbor <code>data.js</code> na server.</p>
-    <div class="btnrow">
-      <button class="btn btn-primary" data-export="datajs">⬇ Exportovať ako data.js</button>
-      <button class="btn btn-ghost" data-export="json">⬇ Exportovať JSON (záloha)</button>
-      <button class="btn btn-ghost" data-import>⬆ Importovať JSON</button>
-      <button class="btn btn-danger" data-reset>↺ Obnoviť továrenské dáta</button>
-    </div>
-    <input type="file" id="import-file" accept="application/json,.json" hidden>
-    ${field('Náhľad dát (JSON, len na čítanie)', `<textarea readonly rows="12" class="mono">${esc(JSON.stringify(D, null, 2))}</textarea>`)}
-  `);
+function tabPublish() {
+  const c = loadGh();
+  return `
+    ${card('Publikovanie na GitHub Pages', `
+      <p class="hint">Zmeny sa zapíšu do súboru <code>data.json</code> priamo v GitHub repozitári. GitHub Pages sa prebuduje a novú tabuľku uvidia všetci (aj mobil) do ~1 minúty. Žiadne cookies, žiadne ručné nahrávanie.</p>
+      <div class="grid2">
+        ${field('GitHub používateľ / organizácia', `<input data-gh="owner" value="${esc(c.owner || '')}" placeholder="napr. richardpukac">`)}
+        ${field('Názov repozitára', `<input data-gh="repo" value="${esc(c.repo || '')}" placeholder="napr. cyklo">`)}
+        ${field('Vetva (branch)', `<input data-gh="branch" value="${esc(c.branch || 'main')}" placeholder="main">`)}
+        ${field('Cesta k súboru', `<input data-gh="path" value="${esc(c.path || 'data.json')}" placeholder="data.json">`)}
+      </div>
+      ${field('GitHub token', `<input type="password" data-gh="token" value="${esc(c.token || '')}" placeholder="github_pat_… alebo ghp_…">`,
+        'Fine-grained token s právom „Contents: Read and write" na tento repozitár. Uloží sa len v tomto prehliadači.')}
+      <div class="btnrow">
+        <button class="btn btn-primary" data-publish>🚀 Publikovať teraz</button>
+        <button class="btn btn-ghost" data-reload>↻ Načítať zo servera</button>
+        <button class="btn btn-ghost" data-gh-clear>Vymazať token</button>
+      </div>
+      <p class="hint"><b>Kde vziať token:</b> GitHub → Settings → Developer settings → Personal access tokens → <b>Fine-grained tokens</b> → Generate new token. Repository access = tvoj repozitár, Permissions → <b>Contents = Read and write</b>. Token skopíruj sem.</p>
+    `)}
+    ${card('Záloha / obnova', `
+      <div class="btnrow">
+        <button class="btn btn-ghost" data-export="json">⬇ Stiahnuť data.json</button>
+        <button class="btn btn-ghost" data-import>⬆ Importovať JSON zo súboru</button>
+        <button class="btn btn-danger" data-reset>↺ Obnoviť továrenské dáta</button>
+      </div>
+      <input type="file" id="import-file" accept="application/json,.json" hidden>
+      <p class="hint">„Stiahnuť data.json" je záloha aj núdzový spôsob — súbor vieš nahrať do repozitára aj ručne. Po importe/obnove/zmenách nezabudni <b>Publikovať</b>.</p>
+      ${field('Náhľad dát (JSON, len na čítanie)', `<textarea readonly rows="10" class="mono">${esc(JSON.stringify(D, null, 2))}</textarea>`)}
+    `)}
+  `;
 }
 
 /* =====================================================================
@@ -319,6 +347,7 @@ $('#admin-main').addEventListener('input', e => {
     markDirty();
   }
   else if (el.dataset.gallery !== undefined) { D.gallery = linesToArr(el.value); markDirty(); }
+  else if (el.dataset.gh !== undefined) { const c = loadGh(); c[el.dataset.gh] = el.value.trim(); saveGh(c); }
 });
 
 /* Zmena stavu/typu (select) hneď prekreslí kartu kvôli farbám/badge */
@@ -333,7 +362,7 @@ $('#admin-main').addEventListener('change', e => {
 
 /* Kliky: pridať/odstrániť/collapse/export... */
 $('#admin-main').addEventListener('click', e => {
-  const t = e.target.closest('[data-add],[data-del],[data-collapse],[data-fillrest],[data-export],[data-import],[data-reset]');
+  const t = e.target.closest('[data-add],[data-del],[data-collapse],[data-fillrest],[data-export],[data-import],[data-reset],[data-publish],[data-reload],[data-gh-clear]');
   if (!t) return;
 
   /* Collapse etapy */
@@ -380,14 +409,30 @@ $('#admin-main').addEventListener('click', e => {
     return;
   }
 
+  /* Publikovanie / GitHub */
+  if (t.dataset.publish !== undefined) { publishNow(); return; }
+  if (t.dataset.reload !== undefined) {
+    if (dirty && !confirm('Máš nepublikované zmeny. Načítať zo servera a prepísať ich?')) return;
+    (async () => {
+      const loaded = await fetchData();
+      D = loaded ? loaded : cloneData(DEFAULT_DATA);
+      markClean(); renderTab('publish');
+      toast(loaded ? '✓ Načítané zo servera.' : 'data.json sa nepodarilo načítať (použité továrenské).');
+    })();
+    return;
+  }
+  if (t.dataset.ghClear !== undefined) {
+    const c = loadGh(); delete c.token; saveGh(c); renderTab('publish'); toast('Token vymazaný.');
+    return;
+  }
+
   /* Export / Import / Reset */
-  if (t.dataset.export === 'datajs') exportDataJs();
-  else if (t.dataset.export === 'json') download('cyklo-tour-zaloha.json', JSON.stringify(D, null, 2));
+  if (t.dataset.export === 'json') download('data.json', JSON.stringify(D, null, 2));
   else if (t.dataset.import !== undefined) $('#import-file').click();
   else if (t.dataset.reset !== undefined) {
-    if (confirm('Naozaj obnoviť pôvodné dáta? Prídeš o svoje zmeny.')) {
-      resetData(); D = cloneData(DEFAULT_DATA); saveData(D); DATA = cloneData(D);
-      markClean(); renderTab('data'); toast('Obnovené na továrenské dáta.');
+    if (confirm('Naozaj obnoviť pôvodné (továrenské) dáta? Zmeny sa prejavia až po publikovaní.')) {
+      D = cloneData(DEFAULT_DATA);
+      markDirty(); renderTab('publish'); toast('Obnovené na továrenské dáta. Publikuj, aby sa prejavili.');
     }
   }
 });
@@ -402,7 +447,7 @@ document.addEventListener('change', e => {
     try {
       const parsed = JSON.parse(reader.result);
       if (!isValidData(parsed)) throw new Error('neplatný formát');
-      D = parsed; markDirty(); renderTab('data'); toast('✓ Importované. Nezabudni Uložiť.');
+      D = parsed; markDirty(); renderTab('publish'); toast('✓ Importované. Nezabudni Publikovať.');
     } catch (err) { alert('Import zlyhal: ' + err.message); }
   };
   reader.readAsText(file);
@@ -414,27 +459,4 @@ function download(filename, text) {
   a.href = URL.createObjectURL(new Blob([text], { type: 'text/plain' }));
   a.download = filename; a.click();
   URL.revokeObjectURL(a.href);
-}
-function exportDataJs() {
-  const content =
-`/* =====================================================================
-   CYKLO TOUR 2026 — DÁTA + ÚLOŽISKO (vyexportované z admin panelu)
-   Nahraj tento súbor na hosting namiesto pôvodného data.js.
-   ===================================================================== */
-
-const DEFAULT_DATA = ${JSON.stringify(D, null, 2)};
-
-const STORE_KEY = 'cykloTour2026';
-function cloneData(d) { return JSON.parse(JSON.stringify(d)); }
-function isValidData(d) { return d && Array.isArray(d.teams) && Array.isArray(d.stages) && Array.isArray(d.premieTypes) && d.points && d.meta; }
-function loadData() {
-  try { const raw = localStorage.getItem(STORE_KEY); if (raw) { const p = JSON.parse(raw); if (isValidData(p)) return p; } } catch (e) {}
-  return cloneData(DEFAULT_DATA);
-}
-function saveData(d) { localStorage.setItem(STORE_KEY, JSON.stringify(d)); }
-function resetData() { localStorage.removeItem(STORE_KEY); }
-let DATA = loadData();
-`;
-  download('data.js', content);
-  toast('Stiahnuté data.js — nahraj ho na hosting.');
 }
