@@ -49,10 +49,10 @@
     {
       "id": "slnecnicebike",
       "name": "SlnečniceBike",
-      "color": "#ffd042",
+      "color": "#f2b705",
       "riders": [
         "Michaela Pavolková",
-        "Richard Pukáčc"
+        "Richard Pukáč"
       ]
     },
     {
@@ -82,6 +82,12 @@
         "Jaroslav Leferovič",
         "Iveta Leferovičová"
       ]
+    },
+    {
+      "id": "tim-4",
+      "name": "skuska",
+      "color": "#888888",
+      "riders": []
     }
   ],
   "stages": [
