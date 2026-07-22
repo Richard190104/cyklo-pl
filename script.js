@@ -410,7 +410,12 @@ function renderGalleryBlock(photos, title) {
 }
 
 function renderGallery() {
-  return `<div class="wrap"><h2 class="sec-title">Galéria</h2>${renderGalleryBlock(DATA.gallery, 'Spoločná galéria')}</div>`;
+  // Spoločná galéria = všetky fotky z etáp + fotky pridané priamo do galérie (bez duplikátov)
+  const all = [];
+  DATA.stages.forEach(st => (st.photos || []).forEach(p => all.push(p)));
+  (DATA.gallery || []).forEach(p => all.push(p));
+  const unique = [...new Set(all)];
+  return `<div class="wrap"><h2 class="sec-title">Galéria</h2>${renderGalleryBlock(unique, 'Spoločná galéria')}</div>`;
 }
 
 /* =====================================================================
