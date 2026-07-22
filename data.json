@@ -82,12 +82,6 @@
         "Jaroslav Leferovič",
         "Iveta Leferovičová"
       ]
-    },
-    {
-      "id": "tim-4",
-      "name": "skuska",
-      "color": "#888888",
-      "riders": []
     }
   ],
   "stages": [
@@ -103,10 +97,10 @@
         "Patrik Poperník",
         "Michaela Poperníková",
         "Richard Pukáč",
+        "Michal Pukáč",
         "Michaela Pavolková"
       ],
       "rest": [
-        "Michal Pukáč",
         "Adriána Pukáčová",
         "Jaroslav Leferovič",
         "Iveta Leferovičová"
