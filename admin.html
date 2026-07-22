@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Cyklo Tour 2026</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="admin-body">
+
+  <!-- PRIHLÁSENIE -->
+  <div id="login" class="login-screen">
+    <form id="login-form" class="login-card">
+      <div class="login-logo"><span class="dot"></span> CYKLO TOUR 2026</div>
+      <h1>Admin panel</h1>
+      <p class="login-sub">Prihlás sa na správu pretekov</p>
+      <label>Meno<input type="text" id="u" autocomplete="username" required></label>
+      <label>Heslo<input type="password" id="p" autocomplete="current-password" required></label>
+      <p id="login-err" class="login-err"></p>
+      <button type="submit" class="btn btn-primary btn-block">Prihlásiť sa</button>
+      <a href="index.html" class="login-back">← Späť na web</a>
+    </form>
+  </div>
+
+  <!-- ADMIN -->
+  <div id="admin" class="admin-wrap" hidden>
+    <header class="admin-top">
+      <div class="admin-brand"><span class="dot"></span> Admin · Cyklo Tour 2026</div>
+      <div class="admin-actions">
+        <span id="save-state" class="save-state"></span>
+        <a href="index.html" target="_blank" class="btn btn-ghost">Zobraziť web ↗</a>
+        <button id="btn-save" class="btn btn-primary">💾 Uložiť</button>
+        <button id="btn-logout" class="btn btn-ghost">Odhlásiť</button>
+      </div>
+    </header>
+
+    <nav class="admin-tabs">
+      <button class="atab active" data-tab="stages">Etapy</button>
+      <button class="atab" data-tab="teams">Tímy a jazdci</button>
+      <button class="atab" data-tab="premies">Typy prémií</button>
+      <button class="atab" data-tab="scoring">Bodovanie</button>
+      <button class="atab" data-tab="general">Všeobecné</button>
+      <button class="atab" data-tab="gallery">Galéria</button>
+      <button class="atab" data-tab="data">Export / Import</button>
+    </nav>
+
+    <main id="admin-main" class="admin-main"></main>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="data.js"></script>
+  <script src="admin.js"></script>
+</body>
+</html>

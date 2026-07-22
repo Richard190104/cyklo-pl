@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cyklo Tour 2026 — Huta Różaniecka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="brand" data-goto="home" href="#home">
+        <span class="dot"></span>
+        <span>CYKLO TOUR 2026<small>Huta Różaniecka</small></span>
+      </a>
+      <button id="burger" aria-label="Menu">☰</button>
+      <div class="nav-links">
+        <a class="nav-link" data-route="home">Domov</a>
+        <a class="nav-link" data-route="teams">Tímy</a>
+        <a class="nav-link" data-route="stages">Etapy</a>
+        <a class="nav-link" data-route="board">Poradie</a>
+        <a class="nav-link" data-route="rules">Vysvetlivky</a>
+        <a class="nav-link" data-route="gallery">Galéria</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="app"><!-- render cez JS --></main>
+
+  <footer class="footer">
+    🚴 Cyklo Tour 2026 · Huta Różaniecka · 22. – 26. júla · vytvorené v duchu Tour de France
+    <br><a class="footer-admin" href="admin.html">Admin panel</a>
+  </footer>
+
+  <script src="data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
