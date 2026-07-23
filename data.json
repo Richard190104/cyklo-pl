@@ -161,8 +161,14 @@
       "title": "čaká sa",
       "type": "čaká sa",
       "dist": "66 km",
-      "status": "upcoming",
-      "finish": [],
+      "status": "done",
+      "finish": [
+        "Iveta Leferovičová",
+        "Michal Pukáč",
+        "Jaroslav Leferovič",
+        "Richard Pukáč",
+        "Michaela Pavolková"
+      ],
       "rest": [],
       "premies": [
         {
