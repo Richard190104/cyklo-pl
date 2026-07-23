@@ -177,6 +177,28 @@
             "Michaela Poperníková",
             "Michal Pukáč"
           ]
+        },
+        {
+          "typeId": "nova-premia-2",
+          "label": "Horská prémia",
+          "order": [
+            "Michal Pukáč",
+            "Richard Pukáč",
+            "Michaela Pavolková",
+            "Iveta Leferovičová",
+            "Jaroslav Leferovič"
+          ]
+        },
+        {
+          "typeId": "nova-premia-2",
+          "label": "Horská prémia",
+          "order": [
+            "Jaroslav Leferovič",
+            "Iveta Leferovičová",
+            "Michal Pukáč",
+            "Richard Pukáč",
+            "Michaela Pavolková"
+          ]
         }
       ],
       "photos": []
