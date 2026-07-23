@@ -149,11 +149,25 @@
       "date": "23. 7. 2026",
       "title": "čaká sa",
       "type": "čaká sa",
-      "dist": "čaká sa",
+      "dist": "66 km",
       "status": "upcoming",
       "finish": [],
       "rest": [],
-      "premies": [],
+      "premies": [
+        {
+          "typeId": "sprint",
+          "label": "Špurtérska prémia",
+          "order": [
+            "Richard Pukáč",
+            "Patrik Poperník",
+            "Michaela Pavolková",
+            "Iveta Leferovičová",
+            "Jaroslav Leferovič",
+            "Michaela Poperníková",
+            "Michal Pukáč"
+          ]
+        }
+      ],
       "photos": []
     },
     {
